@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drum Rhythm Creator - Imagine Theme</title>
+    <title>Drum Rhythm Creator</title>
     <style>
         body { background: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 10px; box-sizing: border-box; color: #333; }
         canvas { border: 1px solid #eee; background: #fff; margin: 10px auto; display: block; width: 100%; height: auto; touch-action: none; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -13,7 +13,7 @@
     </style>
 </head>
 <body>
-    <h1>Drum Rhythm Creator - Imagine Theme</h1>
+    <h1>Drum Rhythm Creator</h1>
     <canvas id="drumCanvas" width="800" height="600"></canvas>
     <button id="recordBtn">Start Recording</button>
     <button id="stopBtn" disabled>Stop Recording</button>
@@ -22,22 +22,22 @@
     <script>
         // Drum types: 5 left, 5 right (9 unique, duplicate hi-hat closed/open as separate)
         const drums = [
-            { name: 'Hi Hat (Closed)', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404878_5121236-lq.mp3', x: 100, y: 100, open: false }, // Left 1
-            { name: 'High Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404879_5121236-lq.mp3', x: 100, y: 200, open: false }, // Left 2
-            { name: 'Ride', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404880_5121236-lq.mp3', x: 100, y: 300, open: false }, // Left 3
-            { name: 'Crash', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404881_5121236-lq.mp3', x: 100, y: 400, open: false }, // Left 4
-            { name: 'Snare', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404882_5121236-lq.mp3', x: 100, y: 500, open: false }, // Left 5
-            { name: 'Floor Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404883_5121236-lq.mp3', x: 700, y: 100, open: false }, // Right 1
-            { name: 'Bass Drum', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 700, y: 200, open: false }, // Right 2
-            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://freesound.org/data/previews/404/404885_5121236-lq.mp3', x: 700, y: 300, open: true }, // Right 3 (chick/open sound)
-            { name: 'Mid Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404886_5121236-lq.mp3', x: 700, y: 400, open: false }, // Right 4
-            { name: 'Hi Hat (Open)', symbol: 'O above X', sound: 'https://freesound.org/data/previews/404/404887_5121236-lq.mp3', x: 700, y: 500, open: true }  // Right 5 (open hi-hat)
+            { name: 'Hi Hat (Closed)', symbol: 'X', sound: 'https://www.soundjay.com/buttons/hi-hat-closed.mp3', x: 0, y: 0, open: false }, // Left 1
+            { name: 'High Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-high.mp3', x: 0, y: 0, open: false }, // Left 2
+            { name: 'Ride', symbol: 'X', sound: 'https://www.soundjay.com/buttons/ride-cymbal.mp3', x: 0, y: 0, open: false }, // Left 3
+            { name: 'Crash', symbol: 'X', sound: 'https://www.soundjay.com/buttons/crash-cymbal.mp3', x: 0, y: 0, open: false }, // Left 4
+            { name: 'Snare', symbol: 'O', sound: 'https://www.soundjay.com/buttons/snare-drum.mp3', x: 0, y: 0, open: false }, // Left 5
+            { name: 'Floor Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-low.mp3', x: 0, y: 0, open: false }, // Right 1
+            { name: 'Bass Drum', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum.mp3', x: 0, y: 0, open: false }, // Right 2
+            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://www.soundjay.com/buttons/hi-hat-foot.mp3', x: 0, y: 0, open: true }, // Right 3 (chick/open sound)
+            { name: 'Mid Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-mid.mp3', x: 0, y: 0, open: false }, // Right 4
+            { name: 'Hi Hat (Open)', symbol: 'O above X', sound: 'https://www.soundjay.com/buttons/hi-hat-open.mp3', x: 0, y: 0, open: true }  // Right 5 (open hi-hat)
         ];
 
         // Add 2 speed kick drums at the bottom
         drums.push(
-            { name: 'Speed Kick 1', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 300, y: 550, open: false }, // Bottom 1 - standard kick
-            { name: 'Speed Kick 2', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 500, y: 550, open: false }  // Bottom 2 - same sound, but can play polyphonically for double-kick
+            { name: 'Speed Kick 1', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum-fast.mp3', x: 0, y: 0, open: false }, // Bottom 1 - standard kick
+            { name: 'Speed Kick 2', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum-fast.mp3', x: 0, y: 0, open: false }  // Bottom 2 - same sound, but can play polyphonically for double-kick
         );
 
         const canvas = document.getElementById('drumCanvas');
@@ -54,27 +54,52 @@
         // Preload sounds
         drums.forEach(drum => {
             drum.audio = new Audio(drum.sound);
-            drum.audio.volume = 0.7;  # Slightly louder for clarity
+            drum.audio.volume = 0.7;  // Slightly louder for clarity
+            drum.audio.load();  // Preload to reduce latency
         });
 
-        // Draw drum pads and staff symbols (responsive scaling)
+        // Draw drum pads and staff symbols (responsive scaling, closer/smaller for mobile)
         function drawDrums() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
 
             // Draw staff lines (5 lines for notation feel, scaled to canvas)
-            const staffYStart = canvas.height / 4;
+            const staffYStart = canvas.height / 5;
             for (let i = 0; i < 5; i++) {
                 ctx.beginPath();
-                ctx.moveTo(0, staffYStart + i * (canvas.height / 10));
-                ctx.lineTo(canvas.width, staffYStart + i * (canvas.height / 10));
+                ctx.moveTo(0, staffYStart + i * (canvas.height / 12));
+                ctx.lineTo(canvas.width, staffYStart + i * (canvas.height / 12));
                 ctx.stroke();
             }
 
-            // Draw drum pads and symbols (positions scaled to canvas size)
-            const padRadius = canvas.width / 20;
-            drums.forEach((drum, index) => {
+            // Draw drum pads and symbols (positions scaled to canvas size, closer/smaller)
+            const padRadius = canvas.width / 25;  // Smaller radius for mobile
+            const spacing = canvas.height / 8;  // Closer spacing
+            const leftX = canvas.width / 4;  // Left side centered
+            const rightX = canvas.width * 3 / 4;  // Right side centered
+            const bottomY = canvas.height - padRadius - 20;  // Bottom kicks
+
+            // Left drums (1-5)
+            for (let i = 0; i < 5; i++) {
+                drums[i].x = leftX;
+                drums[i].y = spacing * (i + 1);
+            }
+
+            // Right drums (5-9)
+            for (let i = 5; i < 10; i++) {
+                drums[i].x = rightX;
+                drums[i].y = spacing * (i - 4);
+            }
+
+            // Bottom speed kicks
+            drums[10].x = canvas.width / 3;
+            drums[10].y = bottomY;
+            drums[11].x = canvas.width * 2 / 3;
+            drums[11].y = bottomY;
+
+            // Draw each drum
+            drums.forEach(drum => {
                 ctx.fillStyle = '#ccc';
                 ctx.beginPath();
                 ctx.arc(drum.x, drum.y, padRadius, 0, 2 * Math.PI);
@@ -88,12 +113,12 @@
                 if (drum.open) {
                     ctx.beginPath();
                     ctx.arc(drum.x, drum.y - padRadius / 2, padRadius / 4, 0, 2 * Math.PI);
-                    ctx.fill();  # Small circle for open
+                    ctx.fill();  // Small circle for open
                 }
 
                 // Label (scaled font)
                 ctx.font = `${padRadius / 2}px Arial`;
-                ctx.fillText(drum.name, drum.x - 40, drum.y + padRadius + 20);
+                ctx.fillText(drum.name, drum.x - padRadius, drum.y + padRadius + 15);
             });
         }
 
@@ -110,15 +135,15 @@
         function handleTap(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            const touches = e.touches || [e];  # Support multi-touch for simultaneous taps
+            const touches = e.touches || [e];  // Support multi-touch for simultaneous taps
             Array.from(touches).forEach(touch => {
                 const x = (touch.clientX || touch.pageX) - rect.left;
                 const y = (touch.clientY || touch.pageY) - rect.top;
 
                 drums.forEach((drum, index) => {
-                    if (Math.hypot(x - drum.x, y - drum.y) < canvas.width / 20) {
-                        const audio = new Audio(drum.sound);  # Clone for polyphony
-                        audio.playbackRate = drum.name.includes('Speed Kick') ? 1.2 : 1.0;  # Faster for speed kicks
+                    if (Math.hypot(x - drum.x, y - drum.y) < canvas.width / 25) {
+                        const audio = new Audio(drum.sound);  // Clone for polyphony
+                        audio.playbackRate = drum.name.includes('Speed Kick') ? 1.2 : 1.0;  // Faster for speed kicks
                         audio.play();
                         if (recording) {
                             rhythm.push({ index, time: Date.now() - startTime });
