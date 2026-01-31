@@ -136,7 +136,7 @@
         // Handle taps/clicks (mouse + touch support for simultaneous/quick taps)
         function handleTap(e) {
             e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
+            const rect = canvas.getBoundingRect();
             const touches = e.touches || [e];  // Support multi-touch for simultaneous taps
             Array.from(touches).forEach(touch => {
                 const x = (touch.clientX || touch.pageX) - rect.left;
