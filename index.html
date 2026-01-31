@@ -3,43 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drum Rhythm Creator</title>
+    <title>Imagine Drum Kit</title>
     <style>
-        body { background: #f0f0f0; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 10px; box-sizing: border-box; color: #333; }
-        canvas { border: 2px solid #333; background: #fff; margin: 10px auto; display: block; width: 100%; height: auto; touch-action: none; }
-        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; width: 45%; }
-        #status { font-size: 18px; color: #666; }
-        @media (max-width: 600px) { button { width: 90%; } }
+        body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; text-align: center; color: #fff; }
+        h1 { color: #fff; text-shadow: 0 0 5px #ccc, 1px 1px 2px #999, -1px -1px 2px #999, 1px -1px 2px #999, -1px 1px 2px #999; letter-spacing: 3px; font-size: 2.5em; margin: 20px 0; }
+        canvas { width: 100%; height: 80vh; touch-action: none; }
+        .controls { padding: 10px; }
+        button { padding: 12px 24px; margin: 5px; font-size: 18px; background: #333; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+        #status { font-size: 18px; margin: 10px; }
     </style>
 </head>
 <body>
     <h1>Imagine</h1>
-    <canvas id="drumCanvas" width="800" height="600"></canvas>
-    <button id="recordBtn">Start Recording</button>
-    <button id="stopBtn" disabled>Stop Recording</button>
-    <button id="replayBtn" disabled>Replay Rhythm</button>
-    <p id="status">Tap the drums to play sounds! (Mobile-Friendly)</p>
+    <canvas id="drumCanvas"></canvas>
+    <div class="controls">
+        <button id="recordBtn">Start Recording</button>
+        <button id="stopBtn" disabled>Stop Recording</button>
+        <button id="replayBtn" disabled>Replay Rhythm</button>
+    </div>
+    <p id="status">Tap the drums to play! (Mobile-Friendly)</p>
     <script>
-        // Drum types: 5 left, 5 right (9 unique, duplicate hi-hat closed/open as separate)
-        const drums = [
-            { name: 'Hi Hat (Closed)', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404878_5121236-lq.mp3', x: 100, y: 100, open: false }, // Left 1
-            { name: 'High Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404879_5121236-lq.mp3', x: 100, y: 200, open: false }, // Left 2
-            { name: 'Ride', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404880_5121236-lq.mp3', x: 100, y: 300, open: false }, // Left 3
-            { name: 'Crash', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404881_5121236-lq.mp3', x: 100, y: 400, open: false }, // Left 4
-            { name: 'Snare', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404882_5121236-lq.mp3', x: 100, y: 500, open: false }, // Left 5
-            { name: 'Floor Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404883_5121236-lq.mp3', x: 700, y: 100, open: false }, // Right 1
-            { name: 'Bass Drum', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 700, y: 200, open: false }, // Right 2
-            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://www.soundjay.com/buttons/hi-hat-foot.mp3', x: 700, y: 300, open: true }, // Right 3 (chick/open sound)
-            { name: 'Mid Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-mid.mp3', x: 700, y: 400, open: false }, // Right 4
-            { name: 'Hi Hat (Open)', symbol: 'O above X', sound: 'https://www.soundjay.com/buttons/hi-hat-open.mp3', x: 700, y: 500, open: true }  // Right 5 (open hi-hat)
-        ];
-
-        // Add 2 speed kick drums at the bottom
-        drums.push(
-            { name: 'Speed Kick 1', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum-fast.mp3', x: 300, y: 550, open: false }, // Bottom 1 - standard kick
-            { name: 'Speed Kick 2', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum-fast.mp3', x: 500, y: 550, open: false }  // Bottom 2 - same sound, but can play polyphonically for double-kick
-        );
-
         const canvas = document.getElementById('drumCanvas');
         const ctx = canvas.getContext('2d');
         const status = document.getElementById('status');
@@ -47,106 +30,136 @@
         const stopBtn = document.getElementById('stopBtn');
         const replayBtn = document.getElementById('replayBtn');
 
-        let rhythm = [];  // Recorded taps (drum index, timestamp)
+        // Resize canvas to fit
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight * 0.8;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Drum data with positions (like the image: hi-hat left, crash right, toms top, snare center, bass bottom)
+        const drums = [
+            { name: 'Hi Hat', x: canvas.width * 0.2, y: canvas.height * 0.3, radius: canvas.width * 0.1, color: '#ffd700', type: 'cymbal' }, // Left top - yellow hi-hat
+            { name: 'High Tom', x: canvas.width * 0.4, y: canvas.height * 0.2, radius: canvas.width * 0.08, color: '#ff8c00', type: 'tom' }, // Top left tom - orange
+            { name: 'Mid Tom', x: canvas.width * 0.6, y: canvas.height * 0.2, radius: canvas.width * 0.08, color: '#0000ff', type: 'tom' }, // Top right tom - blue
+            { name: 'Crash', x: canvas.width * 0.8, y: canvas.height * 0.3, radius: canvas.width * 0.1, color: '#ffd700', type: 'cymbal' }, // Right top - yellow crash
+            { name: 'Snare', x: canvas.width * 0.5, y: canvas.height * 0.5, radius: canvas.width * 0.12, color: '#ff0000', type: 'snare' }, // Center - red snare
+            { name: 'Bass Drum', x: canvas.width * 0.5, y: canvas.height * 0.8, radius: canvas.width * 0.15, color: '#333', type: 'kick' }, // Bottom - black kick
+            { name: 'Floor Tom', x: canvas.width * 0.7, y: canvas.height * 0.6, radius: canvas.width * 0.1, color: '#8b4513', type: 'tom' } // Bottom right - brown floor tom
+        ];
+
+        // Sounds (replace with better if needed)
+        const sounds = {
+            'Hi Hat': 'https://www.soundjay.com/buttons/hi-hat-closed.mp3',
+            'High Tom': 'https://www.soundjay.com/buttons/tom-high.mp3',
+            'Mid Tom': 'https://www.soundjay.com/buttons/tom-mid.mp3',
+            'Crash': 'https://www.soundjay.com/buttons/crash-cymbal.mp3',
+            'Snare': 'https://www.soundjay.com/buttons/snare-drum.mp3',
+            'Bass Drum': 'https://www.soundjay.com/buttons/kick-drum.mp3',
+            'Floor Tom': 'https://www.soundjay.com/buttons/tom-low.mp3'
+        };
+
+        let rhythm = [];
         let recording = false;
         let startTime = 0;
+        let sticks = []; // For stick animation
 
-        // Preload sounds with error handling
-        drums.forEach(drum => {
-            const audio = new Audio(drum.sound);
-            audio.addEventListener('error', () => console.log(`Error loading sound for ${drum.name}`));
+        // Preload sounds
+        Object.values(sounds).forEach(url => {
+            const audio = new Audio(url);
             audio.load();
-            drum.audio = audio;  // Assign preloaded
         });
 
-        // Draw drum pads and staff symbols (responsive scaling, closer/smaller for mobile)
-        function drawDrums() {
+        // Draw the kit
+        function drawKit() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
 
-            // Draw staff lines (5 lines for notation feel, scaled to canvas)
-            const staffYStart = canvas.height / 5;
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, staffYStart + i * (canvas.height / 12));
-                ctx.lineTo(canvas.width, staffYStart + i * (canvas.height / 12));
-                ctx.stroke();
-            }
+            // Waveform visualization (red like image)
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height * 0.1);
 
-            // Draw drum pads and symbols (positions scaled to canvas size, closer/smaller)
-            const padRadius = canvas.width / 30;  // Smaller radius for mobile
-            const spacing = canvas.height / 12;  // Closer spacing
-            const leftX = canvas.width / 4;  // Left side centered
-            const rightX = canvas.width * 3 / 4;  // Right side centered
-            const bottomY = canvas.height - padRadius - 20;  // Bottom kicks
-
-            // Left drums (1-5)
-            for (let i = 0; i < 5; i++) {
-                drums[i].x = leftX;
-                drums[i].y = spacing * (i + 1);
-            }
-
-            // Right drums (5-9)
-            for (let i = 5; i < 10; i++) {
-                drums[i].x = rightX;
-                drums[i].y = spacing * (i - 4);
-            }
-
-            // Bottom speed kicks (closer together)
-            drums[10].x = canvas.width / 3;
-            drums[10].y = bottomY;
-            drums[11].x = canvas.width * 2 / 3;
-            drums[11].y = bottomY;
-
-            // Draw each drum
+            // Draw drums
             drums.forEach(drum => {
-                ctx.fillStyle = '#ccc';
+                // Shadow for depth
+                ctx.shadowColor = '#666';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 5;
+                ctx.shadowOffsetY = 5;
+
+                // Drum head
+                const grad = ctx.createRadialGradient(drum.x, drum.y, 0, drum.x, drum.y, drum.radius);
+                grad.addColorStop(0, drum.color);
+                grad.addColorStop(1, '#000');
+                ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.arc(drum.x, drum.y, padRadius, 0, 2 * Math.PI);
+                ctx.arc(drum.x, drum.y, drum.radius, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Rim
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 5;
                 ctx.stroke();
 
-                // Draw symbol (X or O)
-                ctx.fillStyle = '#000';
-                ctx.font = `${padRadius * 0.8}px Arial`;
-                ctx.fillText(drum.symbol, drum.x - padRadius / 2, drum.y + padRadius / 4);
-                if (drum.open) {
-                    ctx.beginPath();
-                    ctx.arc(drum.x, drum.y - padRadius / 2, padRadius / 4, 0, 2 * Math.PI);
-                    ctx.fill();  // Small circle for open
+                // Details (e.g., wires for snare)
+                if (drum.type === 'snare') {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    for (let i = -3; i <= 3; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(drum.x - drum.radius, drum.y + i * 10);
+                        ctx.lineTo(drum.x + drum.radius, drum.y + i * 10);
+                        ctx.stroke();
+                    }
                 }
 
-                // Label (scaled font)
-                ctx.font = `${padRadius / 2}px Arial`;
-                ctx.fillText(drum.name, drum.x - padRadius, drum.y + padRadius + 15);
+                // Pedal for bass
+                if (drum.type === 'kick') {
+                    ctx.fillStyle = '#666';
+                    ctx.beginPath();
+                    ctx.moveTo(drum.x, drum.y + drum.radius);
+                    ctx.lineTo(drum.x - 20, drum.y + drum.radius + 50);
+                    ctx.lineTo(drum.x + 20, drum.y + drum.radius + 50);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+            });
+
+            // Draw sticks on tap
+            sticks.forEach(stick => {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(stick.x1, stick.y1);
+                ctx.lineTo(stick.x2, stick.y2);
+                ctx.stroke();
             });
         }
 
-        // Initial draw with delay to ensure canvas ready
-        setTimeout(drawDrums, 100);
+        drawKit();
 
-        // Responsive resize
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth * 0.9;
-            canvas.height = window.innerHeight * 0.6;
-            drawDrums();
-        });
-
-        // Handle taps/clicks (mouse + touch support for simultaneous/quick taps)
+        // Handle taps (mouse + touch for simultaneous/quick)
         function handleTap(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            const touches = e.touches || [e];  // Support multi-touch for simultaneous taps
+            const touches = e.touches || [e];
             Array.from(touches).forEach(touch => {
                 const x = (touch.clientX || touch.pageX) - rect.left;
                 const y = (touch.clientY || touch.pageY) - rect.top;
 
                 drums.forEach((drum, index) => {
-                    if (Math.hypot(x - drum.x, y - drum.y) < canvas.width / 30) {
-                        const audio = new Audio(drum.sound);  // Clone for polyphony
-                        audio.playbackRate = drum.name.includes('Speed Kick') ? 1.2 : 1.0;  // Faster for speed kicks
-                        audio.play().catch(err => console.log('Audio play error:', err));  // Catch playback errors
+                    if (Math.hypot(x - drum.x, y - drum.y) < drum.radius) {
+                        const audio = new Audio(sounds[drum.name]);
+                        audio.play();
+                        // Stick animation
+                        sticks.push({
+                            x1: drum.x, y1: drum.y,
+                            x2: drum.x + Math.random() * 40 - 20, y2: drum.y + Math.random() * 40 - 20,
+                            time: Date.now()
+                        });
                         if (recording) {
                             rhythm.push({ index, time: Date.now() - startTime });
                         }
@@ -154,12 +167,15 @@
                     }
                 });
             });
+            drawKit();
+            // Fade sticks
+            sticks = sticks.filter(stick => Date.now() - stick.time < 300);
         }
 
         canvas.addEventListener('click', handleTap);
         canvas.addEventListener('touchstart', handleTap);
 
-        // Record button
+        // Record/Replay (unchanged)
         recordBtn.addEventListener('click', () => {
             recording = true;
             rhythm = [];
@@ -169,7 +185,6 @@
             status.textContent = 'Recording... Tap the drums!';
         });
 
-        // Stop button
         stopBtn.addEventListener('click', () => {
             recording = false;
             recordBtn.disabled = false;
@@ -178,18 +193,30 @@
             status.textContent = 'Recording stopped. Ready to replay!';
         });
 
-        // Replay button
         replayBtn.addEventListener('click', () => {
             status.textContent = 'Replaying...';
             rhythm.forEach(hit => {
                 setTimeout(() => {
-                    const audio = new Audio(drums[hit.index].sound);
-                    audio.playbackRate = drums[hit.index].name.includes('Speed Kick') ? 1.2 : 1.0;
+                    const audio = new Audio(sounds[drums[hit.index].name]);
                     audio.play();
+                    // Stick animation on replay
+                    const drum = drums[hit.index];
+                    sticks.push({
+                        x1: drum.x, y1: drum.y,
+                        x2: drum.x + Math.random() * 40 - 20, y2: drum.y + Math.random() * 40 - 20,
+                        time: Date.now()
+                    });
+                    drawKit();
                 }, hit.time);
             });
-            setTimeout(() => status.textContent = 'Replay finished!', rhythm[rhythm.length - 1].time + 100);
         });
+
+        // Animation loop for sticks/waveform
+        function animate() {
+            drawKit();
+            requestAnimationFrame(animate);
+        }
+        animate();
     </script>
 </body>
 </html>
