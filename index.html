@@ -6,15 +6,14 @@
     <title>Drum Rhythm Creator</title>
     <style>
         body { background: #f0f0f0; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 10px; box-sizing: border-box; color: #333; }
-        h1 { color: #fff; text-shadow: 1px 1px 1px #ccc, -1px -1px 1px #ccc, 1px -1px 1px #ccc, -1px 1px 1px #ccc; letter-spacing: 2px; font-size: 2em; margin: 10px; }
-        canvas { border: 1px solid #eee; background: #fff; margin: 10px auto; display: block; width: 100%; height: auto; touch-action: none; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; width: 45%; background: #eee; border: 1px solid #ddd; border-radius: 5px; }
+        canvas { border: 2px solid #333; background: #fff; margin: 10px auto; display: block; width: 100%; height: auto; touch-action: none; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; width: 45%; }
         #status { font-size: 18px; color: #666; }
         @media (max-width: 600px) { button { width: 90%; } }
     </style>
 </head>
 <body>
-    <h1>Imagine</h1>
+    <h1>Drum Rhythm Creator</h1>
     <canvas id="drumCanvas" width="800" height="600"></canvas>
     <button id="recordBtn">Start Recording</button>
     <button id="stopBtn" disabled>Stop Recording</button>
@@ -23,16 +22,16 @@
     <script>
         // Drum types: 5 left, 5 right (9 unique, duplicate hi-hat closed/open as separate)
         const drums = [
-            { name: 'Hi Hat (Closed)', symbol: 'X', sound: 'https://www.soundjay.com/buttons/hi-hat-closed.mp3', x: 100, y: 100, open: false }, // Left 1
-            { name: 'High Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-high.mp3', x: 100, y: 200, open: false }, // Left 2
-            { name: 'Ride', symbol: 'X', sound: 'https://www.soundjay.com/buttons/ride-cymbal.mp3', x: 100, y: 300, open: false }, // Left 3
-            { name: 'Crash', symbol: 'X', sound: 'https://www.soundjay.com/buttons/crash-cymbal.mp3', x: 100, y: 400, open: false }, // Left 4
-            { name: 'Snare', symbol: 'O', sound: 'https://www.soundjay.com/buttons/snare-drum.mp3', x: 100, y: 500, open: false }, // Left 5
-            { name: 'Floor Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-low.mp3', x: 700, y: 100, open: false }, // Right 1
-            { name: 'Bass Drum', symbol: 'O', sound: 'https://www.soundjay.com/buttons/kick-drum.mp3', x: 700, y: 200, open: false }, // Right 2
-            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://www.soundjay.com/buttons/hi-hat-foot.mp3', x: 700, y: 300, open: true }, // Right 3 (chick/open sound)
-            { name: 'Mid Tom', symbol: 'O', sound: 'https://www.soundjay.com/buttons/tom-mid.mp3', x: 700, y: 400, open: false }, // Right 4
-            { name: 'Hi Hat (Open)', symbol: 'O above X', sound: 'https://www.soundjay.com/buttons/hi-hat-open.mp3', x: 700, y: 500, open: true }  // Right 5 (open hi-hat)
+            { name: 'Hi Hat (Closed)', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404878_5121236-lq.mp3', x: 100, y: 100, open: false }, // Left 1
+            { name: 'High Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404879_5121236-lq.mp3', x: 100, y: 200, open: false }, // Left 2
+            { name: 'Ride', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404880_5121236-lq.mp3', x: 100, y: 300, open: false }, // Left 3
+            { name: 'Crash', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404881_5121236-lq.mp3', x: 100, y: 400, open: false }, // Left 4
+            { name: 'Snare', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404882_5121236-lq.mp3', x: 100, y: 500, open: false }, // Left 5
+            { name: 'Floor Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404883_5121236-lq.mp3', x: 700, y: 100, open: false }, // Right 1
+            { name: 'Bass Drum', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 700, y: 200, open: false }, // Right 2
+            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://freesound.org/data/previews/404/404885_5121236-lq.mp3', x: 700, y: 300, open: true }, // Right 3 (chick/open sound)
+            { name: 'Mid Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404886_5121236-lq.mp3', x: 700, y: 400, open: false }, // Right 4
+            { name: 'Hi Hat (Open)', symbol: 'O above X', sound: 'https://freesound.org/data/previews/404/404887_5121236-lq.mp3', x: 700, y: 500, open: true }  // Right 5 (open hi-hat)
         ];
 
         // Add 2 speed kick drums at the bottom
@@ -137,7 +136,7 @@
         // Handle taps/clicks (mouse + touch support for simultaneous/quick taps)
         function handleTap(e) {
             e.preventDefault();
-            const rect = canvas.getBoundingRect();
+            const rect = canvas.getBoundingClientRect();
             const touches = e.touches || [e];  // Support multi-touch for simultaneous taps
             Array.from(touches).forEach(touch => {
                 const x = (touch.clientX || touch.pageX) - rect.left;
