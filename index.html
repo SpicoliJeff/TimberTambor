@@ -1,178 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imagine Drum Kit</title>
-    <style>
-        body { background: #000; margin: 0; padding: 0; font-family: Arial, sans-serif; color: #fff; text-align: center; }
-        h1 { color: #fff; text-shadow: 0 0 10px #ccc; font-size: 2em; margin: 20px; }
-        canvas { width: 100%; height: 80vh; touch-action: none; }
-        .controls { padding: 10px; }
-        button { padding: 12px 24px; margin: 5px; font-size: 18px; background: #333; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
-        #status { font-size: 18px; margin: 10px; }
-    </style>
+<meta charset="UTF-8">
+<title>Advanced Drum Game</title>
+
+<style>
+    body {
+        background: #f2f2f2;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding-top: 20px;
+    }
+
+    .drum-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 150px);
+        grid-gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .drum {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 60px;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+        user-select: none;
+    }
+
+    .drum.playing {
+        transform: scale(0.9);
+        background: #ffe680;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    }
+
+    .controls {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    button {
+        padding: 12px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+    }
+
+    button:active {
+        transform: scale(0.95);
+    }
+</style>
 </head>
+
 <body>
-    <h1>Imagine</h1>
-    <canvas id="canvas"></canvas>
-    <div class="controls">
-        <button id="record">Start Recording</button>
-        <button id="stop" disabled>Stop</button>
-        <button id="replay" disabled>Replay</button>
-    </div>
-    <p id="status">Tap drums to play</p>
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const status = document.getElementById('status');
-        const recordBtn = document.getElementById('record');
-        const stopBtn = document.getElementById('stop');
-        const replayBtn = document.getElementById('replay');
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight * 0.8;
+<h1>Emoji Drum Game</h1>
+
+<div class="drum-grid">
+    <div class="drum" data-sound="kick">🥁</div>
+    <div class="drum" data-sound="snare">😎</div>
+    <div class="drum" data-sound="hihat">✨</div>
+
+    <div class="drum" data-sound="racktom">😮</div>
+    <div class="drum" data-sound="floortom">😡</div>
+    <div class="drum" data-sound="crash">💥</div>
+</div>
+
+<div class="controls">
+    <button id="recordBtn">● Record</button>
+    <button id="playBtn">▶ Play</button>
+    <button id="metronomeBtn">⏱ Metronome</button>
+</div>
+
+<script>
+    // Sound file paths
+    const sounds = {
+        kick: "sounds/kick.wav",
+        snare: "sounds/snare.wav",
+        hihat: "sounds/hihat.wav",
+        racktom: "sounds/tom1.wav",
+        floortom: "sounds/tom2.wav",
+        crash: "sounds/crash.wav"
+    };
+
+    // Play sound (polyphonic)
+    function playSound(name) {
+        const audio = new Audio(sounds[name]);
+        audio.currentTime = 0;
+        audio.play();
+
+        // Mobile vibration
+        if (navigator.vibrate) {
+            navigator.vibrate(40);
         }
-        window.addEventListener('resize', resize);
-        resize();
+    }
 
-        const drums = [
-            { name: 'Hi Hat', x: canvas.width * 0.2, y: canvas.height * 0.3, r: canvas.width * 0.1 }, // Left
-            { name: 'High Tom', x: canvas.width * 0.35, y: canvas.height * 0.25, r: canvas.width * 0.08 },
-            { name: 'Mid Tom', x: canvas.width * 0.5, y: canvas.height * 0.2, r: canvas.width * 0.08 },
-            { name: 'Floor Tom', x: canvas.width * 0.65, y: canvas.height * 0.25, r: canvas.width * 0.1 },
-            { name: 'Crash', x: canvas.width * 0.8, y: canvas.height * 0.3, r: canvas.width * 0.1 }, // Right
-            { name: 'Snare', x: canvas.width * 0.5, y: canvas.height * 0.5, r: canvas.width * 0.12 },
-            { name: 'Bass', x: canvas.width * 0.5, y: canvas.height * 0.75, r: canvas.width * 0.15 },
-            { name: 'Speed Kick 1', x: canvas.width * 0.35, y: canvas.height * 0.75, r: canvas.width * 0.12 },
-            { name: 'Speed Kick 2', x: canvas.width * 0.65, y: canvas.height * 0.75, r: canvas.width * 0.12 }
-        ];
+    // Button animation
+    function animate(btn) {
+        btn.classList.add("playing");
+        setTimeout(() => btn.classList.remove("playing"), 150);
+    }
 
-        const sounds = {
-            'Hi Hat': 'https://www.soundjay.com/buttons/hi-hat-closed.mp3',
-            'High Tom': 'https://www.soundjay.com/buttons/tom-high.mp3',
-            'Mid Tom': 'https://www.soundjay.com/buttons/tom-mid.mp3',
-            'Floor Tom': 'https://www.soundjay.com/buttons/tom-low.mp3',
-            'Crash': 'https://www.soundjay.com/buttons/crash-cymbal.mp3',
-            'Snare': 'https://www.soundjay.com/buttons/snare-drum.mp3',
-            'Bass': 'https://www.soundjay.com/buttons/kick-drum.mp3',
-            'Speed Kick 1': 'https://www.soundjay.com/buttons/kick-drum-fast.mp3',
-            'Speed Kick 2': 'https://www.soundjay.com/buttons/kick-drum-fast.mp3'
-        };
-
-        let rhythm = [];
-        let recording = false;
-        let startTime = 0;
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Waveform (red)
-            ctx.fillStyle = 'rgba(255,0,0,0.3)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height * 0.1);
-
-            // Drums (realistic shapes)
-            drums.forEach(drum => {
-                ctx.shadowColor = '#666';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetX = 5;
-                ctx.shadowOffsetY = 5;
-
-                // Head
-                const grad = ctx.createRadialGradient(drum.x, drum.y, 0, drum.x, drum.y, drum.r);
-                grad.addColorStop(0, drum.name.includes('Hi Hat') || drum.name.includes('Crash') ? '#ffd700' : drum.name.includes('Snare') ? '#ff0000' : drum.name.includes('Tom') ? '#ff8c00' : '#333');
-                grad.addColorStop(1, '#000');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(drum.x, drum.y, drum.r, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-
-                // Details
-                if (drum.name.includes('Snare')) {
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 2;
-                    for (let i = -3; i <= 3; i++) {
-                        ctx.beginPath();
-                        ctx.moveTo(drum.x - drum.r, drum.y + i * 8);
-                        ctx.lineTo(drum.x + drum.r, drum.y + i * 8);
-                        ctx.stroke();
-                    }
-                }
-                if (drum.name.includes('Bass') || drum.name.includes('Speed Kick')) {
-                    ctx.fillStyle = '#666';
-                    ctx.beginPath();
-                    ctx.moveTo(drum.x, drum.y + drum.r);
-                    ctx.lineTo(drum.x - 30, drum.y + drum.r + 60);
-                    ctx.lineTo(drum.x + 30, drum.y + drum.r + 60);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-
-                ctx.shadowColor = 'transparent';
-            });
-        }
-
-        draw();
-
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            draw();
+    // Click/tap
+    document.querySelectorAll(".drum").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const sound = btn.dataset.sound;
+            playSound(sound);
+            animate(btn);
+            recordHit(sound);
         });
+    });
 
-        function handleTap(e) {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const touches = e.touches || [e];
-            Array.from(touches).forEach(touch => {
-                const x = (touch.clientX || touch.pageX) - rect.left;
-                const y = (touch.clientY || touch.pageY) - rect.top;
+    // Keyboard mapping
+    const keyMap = {
+        "a": "kick",
+        "s": "snare",
+        "d": "hihat",
+        "j": "racktom",
+        "k": "floortom",
+        "l": "crash"
+    };
 
-                drums.forEach((drum, index) => {
-                    if (Math.hypot(x - drum.x, y - drum.y) < drum.r) {
-                        const audio = new Audio(sounds[drum.name]);
-                        audio.playbackRate = drum.name.includes('Speed Kick') ? 1.2 : 1.0;
-                        audio.play();
-                        if (recording) rhythm.push({ index, time: Date.now() - startTime });
-                        status.textContent = `Tapped: ${drum.name}`;
-                    }
-                });
-            });
+    document.addEventListener("keydown", e => {
+        const sound = keyMap[e.key];
+        if (sound) {
+            const btn = document.querySelector(`[data-sound="${sound}"]`);
+            playSound(sound);
+            animate(btn);
+            recordHit(sound);
+        }
+    });
+
+    // Recording system
+    let isRecording = false;
+    let recordStart = 0;
+    let recordedHits = [];
+
+    function recordHit(sound) {
+        if (!isRecording) return;
+        const time = Date.now() - recordStart;
+        recordedHits.push({ sound, time });
+    }
+
+    document.getElementById("recordBtn").onclick = () => {
+        if (!isRecording) {
+            recordedHits = [];
+            recordStart = Date.now();
+            isRecording = true;
+            document.getElementById("recordBtn").innerText = "■ Stop";
+        } else {
+            isRecording = false;
+            document.getElementById("recordBtn").innerText = "● Record";
+        }
+    };
+
+    // Playback
+    document.getElementById("playBtn").onclick = () => {
+        if (recordedHits.length === 0) return;
+
+        recordedHits.forEach(hit => {
+            setTimeout(() => {
+                playSound(hit.sound);
+                const btn = document.querySelector(`[data-sound="${hit.sound}"]`);
+                animate(btn);
+            }, hit.time);
+        });
+    };
+
+    // Metronome
+    let metroInterval = null;
+
+    document.getElementById("metronomeBtn").onclick = () => {
+        if (metroInterval) {
+            clearInterval(metroInterval);
+            metroInterval = null;
+            document.getElementById("metronomeBtn").innerText = "⏱ Metronome";
+            return;
         }
 
-        canvas.addEventListener('click', handleTap);
-        canvas.addEventListener('touchstart', handleTap);
+        // 120 BPM default
+        const bpm = 120;
+        const interval = 60000 / bpm;
 
-        recordBtn.onclick = () => {
-            recording = true;
-            rhythm = [];
-            startTime = Date.now();
-            recordBtn.disabled = true;
-            stopBtn.disabled = false;
-            status.textContent = 'Recording...';
-        };
+        metroInterval = setInterval(() => {
+            const audio = new Audio("sounds/metronome.wav");
+            audio.play();
+        }, interval);
 
-        stopBtn.onclick = () => {
-            recording = false;
-            recordBtn.disabled = false;
-            stopBtn.disabled = true;
-            replayBtn.disabled = false;
-            status.textContent = 'Stopped. Ready to replay.';
-        };
+        document.getElementById("metronomeBtn").innerText = "■ Stop Metronome";
+    };
+</script>
 
-        replayBtn.onclick = () => {
-            status.textContent = 'Replaying...';
-            rhythm.forEach(hit => {
-                setTimeout(() => {
-                    const audio = new Audio(sounds[drums[hit.index].name]);
-                    audio.playbackRate = drums[hit.index].name.includes('Speed Kick') ? 1.2 : 1.0;
-                    audio.play();
-                }, hit.time);
-            });
-        };
-    </script>
 </body>
 </html>
