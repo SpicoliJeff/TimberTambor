@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Rhythm Creator</title>
+    <style>
+        body { background: #f0f0f0; font-family: Arial, sans-serif; text-align: center; }
+        canvas { border: 2px solid #333; background: #fff; margin: 10px auto; display: block; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        #status { font-size: 18px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Drum Rhythm Creator</h1>
+    <canvas id="drumCanvas" width="800" height="400"></canvas>
+    <button id="recordBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <button id="replayBtn" disabled>Replay Rhythm</button>
+    <p id="status">Tap the drums to play sounds!</p>
+    <script>
+        // Drum types and positions (5 on left, 5 on right)
+        const drums = [
+            { name: 'Hi Hat', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404878_5121236-lq.mp3', x: 100, y: 100, open: false }, // Left 1
+            { name: 'High Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404879_5121236-lq.mp3', x: 100, y: 150, open: false }, // Left 2
+            { name: 'Ride', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404880_5121236-lq.mp3', x: 100, y: 200, open: false }, // Left 3
+            { name: 'Crash', symbol: 'X', sound: 'https://freesound.org/data/previews/404/404881_5121236-lq.mp3', x: 100, y: 250, open: false }, // Left 4
+            { name: 'Snare', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404882_5121236-lq.mp3', x: 100, y: 300, open: false }, // Left 5
+            { name: 'Floor Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404883_5121236-lq.mp3', x: 700, y: 100, open: false }, // Right 1
+            { name: 'Bass Drum', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404884_5121236-lq.mp3', x: 700, y: 150, open: false }, // Right 2
+            { name: 'Hi Hat Foot', symbol: 'X (foot)', sound: 'https://freesound.org/data/previews/404/404885_5121236-lq.mp3', x: 700, y: 200, open: true }, // Right 3 (open sound)
+            { name: 'Mid Tom', symbol: 'O', sound: 'https://freesound.org/data/previews/404/404886_5121236-lq.mp3', x: 700, y: 250, open: false }, // Right 4
+            { name: ' Spare/Custom', symbol: 'X/O', sound: 'https://freesound.org/data/previews/404/404887_5121236-lq.mp3', x: 700, y: 300, open: false }  // Right 5 (customizable)
+        ];
+
+        const canvas = document.getElementById('drumCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const replayBtn = document.getElementById('replayBtn');
+
+        let rhythm = [];  # Recorded taps (drum index, timestamp)
+        let recording = false;
+        let startTime = 0;
+
+        // Preload sounds
+        drums.forEach(drum => {
+            drum.audio = new Audio(drum.sound);
+        });
+
+        // Draw drum pads and staff symbols
+        function drawDrums() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+
+            // Draw staff lines (5 lines for notation feel)
+            for (let i = 1; i < 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * 50);
+                ctx.lineTo(canvas.width, i * 50);
+                ctx.stroke();
+            }
+
+            // Draw drum pads and symbols
+            drums.forEach((drum, index) => {
+                ctx.fillStyle = '#ccc';
+                ctx.beginPath();
+                ctx.arc(drum.x, drum.y, 40, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw symbol (X or O)
+                ctx.fillStyle = '#000';
+                ctx.font = '30px Arial';
+                ctx.fillText(drum.symbol, drum.x - 10, drum.y + 10);
+                if (drum.open) {
+                    ctx.beginPath();
+                    ctx.arc(drum.x, drum.y - 20, 5, 0, 2 * Math.PI);
+                    ctx.fill();  # Small circle for open
+                }
+
+                // Label
+                ctx.font = '12px Arial';
+                ctx.fillText(drum.name, drum.x - 40, drum.y + 60);
+            });
+        }
+
+        drawDrums();
+
+        // Handle taps/clicks
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            drums.forEach((drum, index) => {
+                if (Math.hypot(x - drum.x, y - drum.y) < 40) {
+                    drum.audio.play();
+                    if (recording) {
+                        rhythm.push({ index, time: Date.now() - startTime });
+                    }
+                    status.textContent = `Tapped: ${drum.name}`;
+                }
+            });
+        });
+
+        // Record button
+        recordBtn.addEventListener('click', () => {
+            recording = true;
+            rhythm = [];
+            startTime = Date.now();
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            status.textContent = 'Recording... Tap the drums!';
+        });
+
+        // Stop button
+        stopBtn.addEventListener('click', () => {
+            recording = false;
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+            replayBtn.disabled = false;
+            status.textContent = 'Recording stopped. Ready to replay!';
+        });
+
+        // Replay button
+        replayBtn.addEventListener('click', () => {
+            status.textContent = 'Replaying...';
+            rhythm.forEach(hit => {
+                setTimeout(() => {
+                    drums[hit.index].audio.play();
+                }, hit.time);
+            });
+            setTimeout(() => status.textContent = 'Replay finished!', rhythm[rhythm.length - 1].time + 100);
+        });
+    </script>
+</body>
+</html>
