@@ -92,7 +92,6 @@
 </div>
 
 <script>
-    // Sound file paths
     const sounds = {
         kick: "sounds/kick.wav",
         snare: "sounds/snare.wav",
@@ -102,25 +101,21 @@
         crash: "sounds/crash.wav"
     };
 
-    // Play sound (polyphonic)
     function playSound(name) {
         const audio = new Audio(sounds[name]);
         audio.currentTime = 0;
         audio.play();
 
-        // Mobile vibration
         if (navigator.vibrate) {
             navigator.vibrate(40);
         }
     }
 
-    // Button animation
     function animate(btn) {
         btn.classList.add("playing");
         setTimeout(() => btn.classList.remove("playing"), 150);
     }
 
-    // Click/tap
     document.querySelectorAll(".drum").forEach(btn => {
         btn.addEventListener("click", () => {
             const sound = btn.dataset.sound;
@@ -130,7 +125,6 @@
         });
     });
 
-    // Keyboard mapping
     const keyMap = {
         "a": "kick",
         "s": "snare",
@@ -150,7 +144,6 @@
         }
     });
 
-    // Recording system
     let isRecording = false;
     let recordStart = 0;
     let recordedHits = [];
@@ -173,7 +166,6 @@
         }
     };
 
-    // Playback
     document.getElementById("playBtn").onclick = () => {
         if (recordedHits.length === 0) return;
 
@@ -186,7 +178,6 @@
         });
     };
 
-    // Metronome
     let metroInterval = null;
 
     document.getElementById("metronomeBtn").onclick = () => {
@@ -197,7 +188,6 @@
             return;
         }
 
-        // 120 BPM default
         const bpm = 120;
         const interval = 60000 / bpm;
 
