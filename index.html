@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Drum Set Game</title>
+
+<style>
+    body {
+        background: #e6e6e6;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding-top: 20px;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .drum-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 150px);
+        grid-gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .drum {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #ffffff 40%, #cccccc 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+        user-select: none;
+        border: 4px solid #999;
+    }
+
+    /* Slightly wider kick pads */
+    .kick {
+        width: 200px;
+        height: 150px;
+        border-radius: 30px;
+    }
+
+    .drum.playing {
+        transform: scale(0.9);
+        background: radial-gradient(circle, #fff7cc 40%, #e6c200 100%);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.35);
+    }
+
+    .kick-row {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: -10px;
+    }
+
+    .controls {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    button {
+        padding: 12px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+    }
+
+    button:active {
+        transform: scale(0.95);
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Drum Set</h1>
+
+<!-- Top 2 rows -->
+<div class="drum-grid">
+    <div class="drum" data-sound="crash">CRASH</div>
+    <div class="drum" data-sound="ride">RIDE</div>
+    <div class="drum" data-sound="hihat">HI‑HAT</div>
+
+    <div class="drum" data-sound="snare">SNARE</div>
+    <div class="drum" data-sound="tom">TOM</div>
+    <div class="drum" data-sound="floortom">FLOOR TOM</div>
+</div>
+
+<!-- Bottom row: wide double kicks -->
+<div class="kick-row">
+    <div class="drum kick" data-sound="kickL">KICK L</div>
+    <div class="drum kick" data-sound="kickR">KICK R</div>
+</div>
+
+<div class="controls">
+    <button id="recordBtn">● Record</button>
+    <button id="playBtn">▶ Play</button>
+    <button id="metronomeBtn">⏱ Metronome</button>
+</div>
+
+<script>
+    const sounds = {
+        crash: "sounds/crash.wav",
+        ride: "sounds/ride.wav",
+        hihat: "sounds/hihat.wav",
+        snare: "sounds/snare.wav",
+        tom: "sounds/tom1.wav",
+        floortom: "sounds/tom2.wav",
+        kickL: "sounds/kick.wav",
+        kickR: "sounds/kick.wav"
+    };
+
+    function playSound(name) {
+        const audio = new Audio(sounds[name]);
+        audio.currentTime = 0;
+        audio.play();
+
+        if (navigator.vibrate) {
+            navigator.vibrate(40);
+        }
+    }
+
+    function animate(btn) {
+        btn.classList.add("playing");
+        setTimeout(() => btn.classList.remove("playing"), 150);
+    }
+
+    document.querySelectorAll(".drum").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const sound = btn.dataset.sound;
+            playSound(sound);
+            animate(btn);
+            recordHit(sound);
+        });
+    });
+
+    const keyMap = {
+        "a": "kickL",
+        "s": "kickR",
+        "d": "snare",
+        "f": "hihat",
+        "j": "tom",
+        "k": "floortom",
+        "l": "crash"
+    };
+
+    document.addEventListener("keydown", e => {
+        const sound = keyMap[e.key];
+        if (sound) {
+            const btn = document.querySelector(`[data-sound="${sound}"]`);
+            playSound(sound);
+            animate(btn);
+            recordHit(sound);
+        }
+    });
+
+    let isRecording = false;
+    let recordStart = 0;
+    let recordedHits = [];
+
+    function recordHit(sound) {
+        if (!isRecording) return;
+        const time = Date.now() - recordStart;
+        recordedHits.push({ sound, time });
+    }
+
+    document.getElementById("recordBtn").onclick = () => {
+        if (!isRecording) {
+            recordedHits = [];
+            recordStart = Date.now();
+            isRecording = true;
+            document.getElementById("recordBtn").innerText = "■ Stop";
+        } else {
+            isRecording = false;
+            document.getElementById("recordBtn").innerText = "● Record";
+        }
+    };
+
+    document.getElementById("playBtn").onclick = () => {
+        if (recordedHits.length === 0) return;
+
+        recordedHits.forEach(hit => {
+            setTimeout(() => {
+                playSound(hit.sound);
+                const btn = document.querySelector(`[data-sound="${hit.sound}"]`);
+                animate(btn);
+            }, hit.time);
+        });
+    };
+
+    let metroInterval = null;
+
+    document.getElementById("metronomeBtn").onclick = () => {
+        if (metroInterval) {
+            clearInterval(metroInterval);
+            metroInterval = null;
+            document.getElementById("metronomeBtn").innerText = "⏱ Metronome";
+            return;
+        }
+
+        const bpm = 120;
+        const interval = 60000 / bpm;
+
+        metroInterval = setInterval(() => {
+            const audio = new Audio("sounds/metronome.wav");
+            audio.play();
+        }, interval);
+
+        document.getElementById("metronomeBtn").innerText = "■ Stop Metronome";
+    };
+</script>
+
+</body>
+</html>
