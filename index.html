@@ -2,17 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Advanced Drum Game</title>
+<title>Drum Set Game</title>
 
 <style>
     body {
-        background: #f2f2f2;
+        background: #e6e6e6;
         font-family: Arial, sans-serif;
         display: flex;
         flex-direction: column;
         align-items: center;
         margin: 0;
         padding-top: 20px;
+    }
+
+    h1 {
+        margin-bottom: 10px;
     }
 
     .drum-grid {
@@ -26,21 +30,23 @@
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        background: white;
+        background: radial-gradient(circle, #ffffff 40%, #cccccc 100%);
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 60px;
+        font-size: 22px;
+        font-weight: bold;
         cursor: pointer;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
         transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
         user-select: none;
+        border: 4px solid #999;
     }
 
     .drum.playing {
         transform: scale(0.9);
-        background: #ffe680;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        background: radial-gradient(circle, #fff7cc 40%, #e6c200 100%);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.35);
     }
 
     .controls {
@@ -67,16 +73,16 @@
 
 <body>
 
-<h1>Emoji Drum Game</h1>
+<h1>Drum Set</h1>
 
 <div class="drum-grid">
-    <div class="drum" data-sound="kick">🥁</div>
-    <div class="drum" data-sound="snare">😎</div>
-    <div class="drum" data-sound="hihat">✨</div>
+    <div class="drum" data-sound="kick">KICK</div>
+    <div class="drum" data-sound="snare">SNARE</div>
+    <div class="drum" data-sound="hihat">HI‑HAT</div>
 
-    <div class="drum" data-sound="racktom">😮</div>
-    <div class="drum" data-sound="floortom">😡</div>
-    <div class="drum" data-sound="crash">💥</div>
+    <div class="drum" data-sound="racktom">RACK TOM</div>
+    <div class="drum" data-sound="floortom">FLOOR TOM</div>
+    <div class="drum" data-sound="crash">CRASH</div>
 </div>
 
 <div class="controls">
